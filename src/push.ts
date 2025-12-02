@@ -83,6 +83,7 @@ export interface Push extends ClientConfig {
  * https://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm
  */
 export async function pushParameters({ prefix, file, ...config }: Push): Promise<void> {
+  const startTime = process.hrtime.bigint()
   const client = createClient(config)
 
   const { parameters, ...stat } = await analyze({ client, prefix, file })
@@ -104,5 +105,11 @@ export async function pushParameters({ prefix, file, ...config }: Push): Promise
     await client.send(putCommand)
   }
 
+  const endTime = process.hrtime.bigint()
+  const durationNs = endTime - startTime
+  const durationMs = Number(durationNs) / 1_000_000
+  const durationSec = (durationMs / 1000).toFixed(2)
+
   printStat(stat)
+  console.log(`\nPush duration: ${durationMs.toFixed(2)} ms (${durationSec} s)`)
 }
